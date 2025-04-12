@@ -1,48 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import LeftSidebar from './LeftSidebar';
+import RightSidebar from './RightSidebar';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-  Card, CardContent, Typography, TextField
+  Card, CardContent, Typography, TextField, Divider
 } from '@mui/material';
 
 const MainLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedRegister, setSelectedRegister] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredItems, setFilteredItems] = useState([]);
 
   const handleRegisterSelect = (register) => {
     setSelectedRegister(register);
+    setSelectedItem(null); // reset selected item
     setSearchTerm('');
     setFilteredItems(register.item);
   };
 
-  // Debounce Search
   useEffect(() => {
     if (!selectedRegister?.item) return;
-
     const timeout = setTimeout(() => {
       const lower = searchTerm.toLowerCase();
       const result = selectedRegister.item.filter((item) =>
-        item.itemname.toLowerCase().includes(lower)
+        item.itemname.toLowerCase().includes(lower) ||
+        item.id.toString().includes(lower) ||
+        item.pageno.toLowerCase().includes(lower)
       );
       setFilteredItems(result);
-    }, 300); // 300ms delay
-
+    }, 300);
     return () => clearTimeout(timeout);
   }, [searchTerm, selectedRegister]);
 
-  // Highlight Match in Text
   const highlightMatch = (text, term) => {
     if (!term) return text;
     const regex = new RegExp(`(${term})`, 'gi');
-    return text.replace(regex, `<mark class="bg-yellow-200 rounded">${term}</mark>`);
+    return text.replace(regex, `<mark class="bg-yellow-200 rounded">$1</mark>`);
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px-56px)] overflow-hidden">
-      {/* Sidebar Toggle */}
+    <div className="flex h-[calc(100vh-64px-56px)] overflow-hidden bg-gray-100">
+      {/* Toggle Button */}
       <button
         className="absolute top-2 left-2 z-50 bg-indigo-800 text-white p-2 rounded-md lg:hidden"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -62,49 +63,56 @@ const MainLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 bg-gray-100 p-6 overflow-y-auto">
+      <main className="flex-1 p-6 overflow-y-auto">
         {selectedRegister ? (
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            {/* Register Card */}
-            <Card className="mb-6 shadow-md">
-              <CardContent>
-                <Typography variant="h5" component="h2" className="font-semibold text-indigo-800">
-                  📘 Register Details
+          <div className="space-y-6">
+            {/* Register Info Card */}
+            <Card elevation={3} className="rounded-lg">
+              <CardContent className="space-y-2">
+                <Typography variant="h5" className="text-indigo-700 font-bold">
+                  📘 {selectedRegister.rname}
                 </Typography>
-                <div className="mt-4">
-                  <Typography><strong>Register Name:</strong> {selectedRegister.rname}</Typography>
-                  <Typography><strong>Register ID:</strong> {selectedRegister.id}</Typography>
-                  <Typography><strong>Description:</strong> {selectedRegister.rdisc}</Typography>
-                </div>
+                <Divider />
+                <Typography className="text-gray-700">
+                  <strong>ID:</strong> {selectedRegister.id}
+                </Typography>
+                <Typography className="text-gray-700">
+                  <strong>Description:</strong> {selectedRegister.rdisc}
+                </Typography>
               </CardContent>
             </Card>
 
             {/* Search Input */}
-            <div className="mb-4">
-              <TextField
-                label="🔍 Search Item"
-                variant="outlined"
-                fullWidth
-                size="small"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+            <TextField
+              label="🔍 Search by Name, ID or Page No."
+              variant="outlined"
+              fullWidth
+              size="small"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-white rounded shadow"
+            />
 
-            {/* Items Table */}
-            <TableContainer component={Paper}>
+            {/* Item Table */}
+            <TableContainer component={Paper} className="rounded-lg shadow">
               <Table>
                 <TableHead>
-                  <TableRow>
-                    <TableCell className="font-semibold">Item Name</TableCell>
-                    <TableCell className="font-semibold">Item ID</TableCell>
-                    <TableCell className="font-semibold">Page No</TableCell>
+                  <TableRow className="bg-indigo-100">
+                    <TableCell className="font-semibold">📦 Item Name</TableCell>
+                    <TableCell className="font-semibold">🆔 Item ID</TableCell>
+                    <TableCell className="font-semibold">📄 Page No</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {filteredItems.length > 0 ? (
                     filteredItems.map((item) => (
-                      <TableRow key={item.id} className="hover:bg-gray-100 cursor-pointer">
+                      <TableRow
+                        key={item.id}
+                        className={`hover:bg-indigo-100 cursor-pointer ${
+                          selectedItem?.id === item.id ? 'bg-indigo-200' : ''
+                        }`}
+                        onClick={() => setSelectedItem(item)}
+                      >
                         <TableCell>
                           <span
                             dangerouslySetInnerHTML={{
@@ -128,19 +136,14 @@ const MainLayout = () => {
             </TableContainer>
           </div>
         ) : (
-          <div className="text-center text-xl text-gray-500">
-            <p>Select a register to view its details.</p>
+          <div className="text-center text-xl text-gray-500 mt-32">
+            📚 Select a register to view its details.
           </div>
         )}
       </main>
 
       {/* Right Sidebar */}
-      <aside className="w-72 bg-white border-l border-gray-200 p-4 space-y-4 overflow-y-auto shadow-sm hidden md:block">
-        <h2 className="text-lg font-semibold">🔔 Notifications</h2>
-        <div className="bg-gray-50 p-3 rounded shadow">🔧 Maintenance at 9PM</div>
-        <h2 className="text-lg font-semibold mt-4">📈 Stats</h2>
-        <div className="bg-indigo-100 p-3 rounded shadow">120 Items in stock</div>
-      </aside>
+      <RightSidebar selectedRegister={selectedRegister} selectedItem={selectedItem} />
     </div>
   );
 };
