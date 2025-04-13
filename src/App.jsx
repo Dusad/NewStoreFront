@@ -1,9 +1,10 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Navbar from './components/Navbar';
 import MainLayout from './components/MainLayout';
 
-// Pages Import
+// Pages for routing
 import Dashboard from './pages/Dashboard';
 import CreateRegister from './pages/CreateRegister';
 import RegisterDetails from './pages/RegisterDetails';
@@ -13,33 +14,32 @@ import IssueReturnItem from './pages/IssueReturnItem';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 
-function App() {
+const App = () => {
   return (
     <Router>
       <div className="flex flex-col min-h-screen">
-        {/* Header */}
+        {/* Top Header and Navbar */}
         <Header />
-        
-        {/* Navbar */}
         <Navbar />
 
-        {/* Main Layout */}
-        <MainLayout>
-          {/* Define Routes */}
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/register/create" element={<CreateRegister />} />
-            <Route path="/register/details" element={<RegisterDetails />} />
-            <Route path="/item/add" element={<AddItem />} />
-            <Route path="/item/detail" element={<AddItemDetail />} />
-            <Route path="/item/issue-return" element={<IssueReturnItem />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </MainLayout>
+        {/* Main Routing Area */}
+        <Routes>
+          {/* Main layout wrapper for nested routes */}
+          <Route path="/" element={<MainLayout />}>
+            {/* Nested Routes inside MainLayout */}
+            <Route index element={<Dashboard />} />
+            <Route path="register/create" element={<CreateRegister />} />
+            <Route path="register/details" element={<RegisterDetails />} />
+            <Route path="item/add" element={<AddItem />} />
+            <Route path="item/detail" element={<AddItemDetail />} />
+            <Route path="item/issue-return" element={<IssueReturnItem />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
       </div>
     </Router>
   );
-}
+};
 
 export default App;
