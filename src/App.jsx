@@ -13,6 +13,7 @@ import AddItemDetail from './pages/AddItemDetail';
 import IssueReturnItem from './pages/IssueReturnItem';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import EditRegister from "./pages/EditRegister";
 
 const App = () => {
   return (
@@ -35,6 +36,7 @@ const App = () => {
             <Route path="item/issue-return" element={<IssueReturnItem />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="/register/edit/:id" element={<EditRegister />} />
           </Route>
         </Routes>
       </div>

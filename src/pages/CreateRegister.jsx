@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { TextField, Button, Card, CardContent, Typography, CircularProgress } from '@mui/material';
+import {
+  TextField,
+  Button,
+  Card,
+  CardContent,
+  Typography,
+  CircularProgress,
+} from '@mui/material';
 
 const CreateRegister = () => {
   const [rname, setRname] = useState('');
@@ -21,28 +28,29 @@ const CreateRegister = () => {
     };
 
     try {
-      const response = await axios.post('http://localhost:8080/createregister', newRegister);
-      console.log('Register created:', response.data);
+       await axios.post('http://localhost:8080/createregister', newRegister);
       setSuccess('Register created successfully!');
       setRname('');
       setRdisc('');
     } catch (err) {
-      setError('Error creating register.');
-      console.error('Error creating register:', err);
+      setError('Error creating register.',err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center p-6 min-h-screen bg-gradient-to-r from-indigo-200 to-indigo-500">
-      <Card className="w-full max-w-md rounded-2xl shadow-xl bg-white p-8 transition-all duration-500 transform hover:scale-105">
+    <div className="flex justify-center items-center rounded-2xl min-h-screen bg-gradient-to-r from-indigo-300 to-indigo-500 px-4">
+      <Card className="w-full max-w-lg rounded-2xl shadow-2xl p-6 bg-white">
         <CardContent>
-          <Typography variant="h5" className="mb-6 text-indigo-700 font-bold text-center tracking-wide">
+          <Typography
+            variant="h5"
+            className="text-center mb-6 text-indigo-700 font-bold tracking-wide"
+          >
             Create a New Register
           </Typography>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <TextField
               label="Register Name"
               variant="outlined"
@@ -50,15 +58,16 @@ const CreateRegister = () => {
               value={rname}
               onChange={(e) => setRname(e.target.value)}
               required
-              className="transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               InputProps={{
                 style: {
+                  padding: '12px',
                   fontSize: '16px',
-                  padding: '14px',
+                  margin:'10px',
                 },
               }}
-              onFocus={(e) => e.target.parentElement.classList.add('bg-indigo-100')}
-              onBlur={(e) => e.target.parentElement.classList.remove('bg-indigo-100')}
+              InputLabelProps={{
+                style: { fontSize: '16px' },
+              }}
             />
 
             <TextField
@@ -70,36 +79,49 @@ const CreateRegister = () => {
               value={rdisc}
               onChange={(e) => setRdisc(e.target.value)}
               required
-              className="transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               InputProps={{
                 style: {
+                  padding: '12px',
                   fontSize: '16px',
-                  padding: '14px',
+                  margin:'10px',
                 },
               }}
-              onFocus={(e) => e.target.parentElement.classList.add('bg-indigo-100')}
-              onBlur={(e) => e.target.parentElement.classList.remove('bg-indigo-100')}
+              InputLabelProps={{
+                style: { fontSize: '16px' },
+              }}
             />
 
-            {loading ? (
-              <div className="flex justify-center items-center mt-4">
-                <CircularProgress />
-              </div>
-            ) : (
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                fullWidth
-                className="mt-4 py-3 transition-all duration-300 transform hover:scale-110 hover:bg-indigo-700"
-              >
-                Create Register
-              </Button>
-            )}
+            <div className="pt-3">
+              {loading ? (
+                <div className="flex justify-center">
+                  <CircularProgress size={28} />
+                </div>
+              ) : (
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  sx={{
+                    backgroundColor: '#4F46E5',
+                    fontSize: '16px',
+                    paddingY: '12px',
+                    textTransform: 'none',
+                    borderRadius: '10px',
+                    '&:hover': {
+                      backgroundColor: '#4338CA',
+                      transform: 'scale(1.03)',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  Create Register
+                </Button>
+              )}
+            </div>
 
-            {/* Success or Error Message */}
-            {success && <div className="mt-4 text-green-500 text-center font-semibold">{success}</div>}
-            {error && <div className="mt-4 text-red-500 text-center font-semibold">{error}</div>}
+            {success && <div className="text-green-600 font-medium text-center">{success}</div>}
+            {error && <div className="text-red-600 font-medium text-center">{error}</div>}
           </form>
         </CardContent>
       </Card>

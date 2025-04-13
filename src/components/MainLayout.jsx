@@ -69,7 +69,7 @@ const MainLayout = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-6 overflow-y-auto bg-gradient-to-r from-indigo-200 to-indigo-500 shadow-lg rounded-lg mx-4">
+      <main className="flex-1 p-6 overflow-y-auto shadow-lg rounded-lg mx-4">
         <Outlet />
 
         {isRegisterPage ? (
