@@ -101,7 +101,7 @@ function Navbar() {
             }}
           >
             <AddBox className="text-indigo-500 mr-2" />
-            Add Item
+            Add Item & Manage
           </MenuItem>
           <MenuItem
             className="hover:bg-indigo-100 hover:text-indigo-700 font-medium"
