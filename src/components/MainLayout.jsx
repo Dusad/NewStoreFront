@@ -127,7 +127,7 @@ const MainLayout = () => {
                             />
                           </TableCell>
                           <TableCell>{item.id}</TableCell>
-                          <TableCell>{item.pageno}</TableCell>
+                          <TableCell>{item.pageno.join(',')}</TableCell>
                         </TableRow>
                       ))
                     ) : (

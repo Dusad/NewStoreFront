@@ -54,7 +54,6 @@ function AddItem() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "pageno" && !/^\d*$/.test(value)) return;
     setItem({ ...item, [name]: value });
   };
 
@@ -62,12 +61,14 @@ function AddItem() {
     e.preventDefault();
 
     if (item.itemname.trim().length < 3) return setMessage("Item name must be at least 3 characters long.");
-    if (!item.pageno.trim()) return setMessage("Page number is required.");
+    if (!item.pageno.trim()) return setMessage("Page number(s) required.");
     if (!item.registerId) return setMessage("Please select a register.");
+
+    const pageArray = item.pageno.split(",").map(p => p.trim()).filter(p => p !== "");
 
     const newItem = {
       itemname: item.itemname.trim(),
-      pageno: item.pageno.trim(),
+      pageno: pageArray,
       register: { id: item.registerId },
     };
 
@@ -100,15 +101,22 @@ function AddItem() {
   };
 
   const openEditDialog = (itm) => {
-    setEditItem({ id: itm.id, itemname: itm.itemname, pageno: itm.pageno, register: { id: itm.register?.id || "" } });
+    setEditItem({
+      id: itm.id,
+      itemname: itm.itemname,
+      pageno: itm.pageno.join(", "),
+      register: { id: itm.register?.id || "" }
+    });
     setEditDialogOpen(true);
   };
 
   const handleEditSave = async () => {
+    const pageArray = editItem.pageno.split(",").map(p => p.trim()).filter(p => p !== "");
+
     const updatedItem = {
       id: editItem.id,
       itemname: editItem.itemname.trim(),
-      pageno: editItem.pageno.trim(),
+      pageno: pageArray,
       register: { id: editItem.register.id }
     };
 
@@ -177,7 +185,6 @@ function AddItem() {
             required
             margin="normal"
             className="bg-white rounded-lg"
-            inputProps={{ minLength: 3 }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -187,7 +194,7 @@ function AddItem() {
             }}
           />
           <TextField
-            label="Page No"
+            label="Page Nos (comma-separated)"
             name="pageno"
             value={item.pageno}
             onChange={handleChange}
@@ -195,7 +202,6 @@ function AddItem() {
             required
             margin="normal"
             className="bg-white rounded-lg"
-            inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -275,10 +281,8 @@ function AddItem() {
               <TableHead className="bg-blue-100">
                 <TableRow>
                   <TableCell className="font-bold text-blue-700">Item Name</TableCell>
-                  <TableCell className="font-bold text-blue-700">Page No</TableCell>
-                  <TableCell className="font-bold text-blue-700" align="right">
-                    Actions
-                  </TableCell>
+                  <TableCell className="font-bold text-blue-700">Pages</TableCell>
+                  <TableCell className="font-bold text-blue-700" align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -290,8 +294,8 @@ function AddItem() {
                         index % 2 === 0 ? "bg-gray-50" : "bg-white"
                       } transition duration-300 ease-in-out hover:scale-[1.01] hover:bg-blue-50`}
                     >
-                      <TableCell className="text-gray-800">{itm.itemname}</TableCell>
-                      <TableCell className="text-gray-800">{itm.pageno}</TableCell>
+                      <TableCell>{itm.itemname}</TableCell>
+                      <TableCell>{(itm.pageno || []).join(", ")}</TableCell>
                       <TableCell align="right">
                         <IconButton color="primary" onClick={() => openEditDialog(itm)}>
                           <Edit />
@@ -320,8 +324,20 @@ function AddItem() {
         <DialogTitle>Edit Item</DialogTitle>
         <DialogContent>
           <TextField label="Item Id" value={editItem.id} fullWidth margin="normal" disabled />
-          <TextField label="Item Name" value={editItem.itemname} onChange={(e) => setEditItem({ ...editItem, itemname: e.target.value })} fullWidth margin="normal" />
-          <TextField label="Page No" value={editItem.pageno} onChange={(e) => setEditItem({ ...editItem, pageno: e.target.value })} fullWidth margin="normal" />
+          <TextField
+            label="Item Name"
+            value={editItem.itemname}
+            onChange={(e) => setEditItem({ ...editItem, itemname: e.target.value })}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Page Nos (comma-separated)"
+            value={editItem.pageno}
+            onChange={(e) => setEditItem({ ...editItem, pageno: e.target.value })}
+            fullWidth
+            margin="normal"
+          />
           <TextField
             select
             label="Select Register"
