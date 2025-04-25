@@ -106,7 +106,7 @@ function RegisterDetails() {
                                    <React.Fragment key={item.id}>
                                      <TableRow>
                                        <TableCell>{item.itemname}</TableCell>
-                                       <TableCell>{item.pageno}</TableCell>
+                                       <TableCell>{item.pageno.join(',')}</TableCell>
                                      </TableRow>
  
                                      {/* Item Details Table */}

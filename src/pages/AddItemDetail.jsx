@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react';
 import {
   TextField, MenuItem, Box, Typography, Button, Table,
   TableBody, TableCell, TableHead, TableRow, Dialog,
-  DialogTitle, DialogContent, DialogActions, IconButton
+  DialogTitle, DialogContent, DialogActions, IconButton,
+  Snackbar, Alert
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs from 'dayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 const AddItemDetail = () => {
   const [registers, setRegisters] = useState([]);
@@ -20,9 +25,10 @@ const AddItemDetail = () => {
   const [formData, setFormData] = useState({
     itemquantity: '',
     issuedquantity: '',
-    itempurchasedate: '',
+    itempurchasedate: null,
     rateperunit: ''
   });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
     fetch("http://localhost:8080/allregister")
@@ -43,15 +49,20 @@ const AddItemDetail = () => {
   useEffect(() => {
     if (selectedItemId) {
       fetch(`http://localhost:8080/itemdetailbyitemid/${selectedItemId}`)
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) throw new Error("ItemDetail not found");
+          return res.json();
+        })
         .then(data => {
           setItemDetail(data);
           const foundItem = items.find(item => item.id === selectedItemId);
           setSelectedItemName(foundItem?.itemname || '');
         })
-        .catch(err => console.error("Error fetching item detail:", err));
+        .catch(() => {
+          setItemDetail(null);
+        });
     }
-  }, [selectedItemId]);
+  }, [selectedItemId, items]);
 
   const handleRegisterChange = (e) => {
     setSelectedRegisterId(e.target.value);
@@ -68,7 +79,7 @@ const AddItemDetail = () => {
     setFormData({
       itemquantity: itemDetail.itemquantity,
       issuedquantity: itemDetail.issuedquantity,
-      itempurchasedate: itemDetail.itempurchasedate,
+      itempurchasedate: dayjs(itemDetail.itempurchasedate),
       rateperunit: itemDetail.rateperunit
     });
     setEditDialogOpen(true);
@@ -78,7 +89,7 @@ const AddItemDetail = () => {
     setFormData({
       itemquantity: '',
       issuedquantity: '',
-      itempurchasedate: '',
+      itempurchasedate: null,
       rateperunit: ''
     });
     setAddDialogOpen(true);
@@ -94,145 +105,175 @@ const AddItemDetail = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleDateChange = (newValue) => {
+    setFormData(prev => ({ ...prev, itempurchasedate: newValue }));
+  };
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
   const handleSubmitEdit = () => {
     fetch(`http://localhost:8080/itemdetail/${itemDetail.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...formData,
+        itempurchasedate: formData.itempurchasedate?.toISOString(),
         item: { id: selectedItemId }
       })
     })
       .then(() => {
+        showSnackbar("ItemDetail updated successfully");
         setEditDialogOpen(false);
-        setSelectedItemId(selectedItemId); // refresh
+        setSelectedItemId(selectedItemId); // refresh data
       });
   };
 
   const handleSubmitAdd = () => {
-    fetch("http://localhost:8080/itemdetail", {
+    fetch(`http://localhost:8080/enteritemdetail/${selectedItemId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...formData,
-        item: { id: selectedItemId }
+        itempurchasedate: formData.itempurchasedate?.toISOString()
       })
     })
       .then(() => {
+        showSnackbar("ItemDetail added successfully");
         setAddDialogOpen(false);
-        setSelectedItemId(selectedItemId); // refresh
+        setSelectedItemId(selectedItemId); // refresh data
       });
   };
 
   const handleDelete = () => {
-    if (itemDetail?.id) {
-      fetch(`http://localhost:8080/itemdetail/${itemDetail.id}`, {
-        method: "DELETE"
-      }).then(() => {
+    fetch(`http://localhost:8080/itemdetail/${itemDetail.id}`, {
+      method: "DELETE"
+    })
+      .then(() => {
         setItemDetail(null);
+        showSnackbar("ItemDetail deleted successfully", 'info');
       });
-    }
   };
 
   return (
-    <Box className="p-4">
-      <Typography variant="h6">Select Register and Item</Typography>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Box className="p-4">
+        <Typography variant="h6">Select Register and Item</Typography>
 
-      <TextField
-        select label="Select Register" fullWidth margin="normal"
-        value={selectedRegisterId} onChange={handleRegisterChange}
-      >
-        {registers.map(reg => (
-          <MenuItem key={reg.id} value={reg.id}>{reg.rname}</MenuItem>
-        ))}
-      </TextField>
-
-      {items.length > 0 && (
-        <TextField
-          select label="Select Item" fullWidth margin="normal"
-          value={selectedItemId} onChange={handleItemChange}
-        >
-          {items.map(item => (
-            <MenuItem key={item.id} value={item.id}>{item.itemname}</MenuItem>
+        <TextField select label="Select Register" fullWidth margin="normal"
+          value={selectedRegisterId} onChange={handleRegisterChange}>
+          {registers.map(reg => (
+            <MenuItem key={reg.id} value={reg.id}>{reg.rname}</MenuItem>
           ))}
         </TextField>
-      )}
 
-      {itemDetail && (
-        <Box className="mt-4">
-          <Typography variant="h6">Item Details</Typography>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Quantity</TableCell>
-                <TableCell>Issued</TableCell>
-                <TableCell>Purchase Date</TableCell>
-                <TableCell>Rate/Unit</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              <TableRow>
-                <TableCell>{itemDetail.id}</TableCell>
-                <TableCell>{itemDetail.itemquantity}</TableCell>
-                <TableCell>{itemDetail.issuedquantity}</TableCell>
-                <TableCell>{itemDetail.itempurchasedate}</TableCell>
-                <TableCell>{itemDetail.rateperunit}</TableCell>
-                <TableCell>
-                  <IconButton onClick={handleOpenEditDialog} color="primary">
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton onClick={handleDelete} color="error">
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </Box>
-      )}
+        {items.length > 0 && (
+          <TextField select label="Select Item" fullWidth margin="normal"
+            value={selectedItemId} onChange={handleItemChange}>
+            {items.map(item => (
+              <MenuItem key={item.id} value={item.id}>{item.itemname}</MenuItem>
+            ))}
+          </TextField>
+        )}
 
-      {selectedItemId && (
-        <Button variant="contained" className="mt-4" onClick={handleOpenAddDialog}>
-          Add New ItemDetail
-        </Button>
-      )}
+        {selectedItemId && (
+          <Button variant="contained" className="mt-4" onClick={handleOpenAddDialog}>
+            Add New ItemDetail
+          </Button>
+        )}
 
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle>Edit ItemDetail</DialogTitle>
-        <DialogContent>
-          <TextField label="Item ID" fullWidth margin="dense" value={selectedItemId} disabled />
-          <TextField label="Item Name" fullWidth margin="dense" value={selectedItemName} disabled />
-          <TextField label="Quantity" name="itemquantity" fullWidth margin="dense" value={formData.itemquantity} onChange={handleChangeForm} />
-          <TextField label="Issued Quantity" name="issuedquantity" fullWidth margin="dense" value={formData.issuedquantity} onChange={handleChangeForm} />
-          <TextField label="Purchase Date" name="itempurchasedate" fullWidth margin="dense" value={formData.itempurchasedate} onChange={handleChangeForm} />
-          <TextField label="Rate/Unit" name="rateperunit" fullWidth margin="dense" value={formData.rateperunit} onChange={handleChangeForm} />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleSubmitEdit}>Save</Button>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
+        {itemDetail ? (
+          <Box className="mt-4">
+            <Typography variant="h6">Item Details</Typography>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>ID</TableCell>
+                  <TableCell>Quantity</TableCell>
+                  <TableCell>Issued</TableCell>
+                  <TableCell>Purchase Date</TableCell>
+                  <TableCell>Rate/Unit</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell>{itemDetail.id}</TableCell>
+                  <TableCell>{itemDetail.itemquantity}</TableCell>
+                  <TableCell>{itemDetail.issuedquantity}</TableCell>
+                  <TableCell>{itemDetail.itempurchasedate}</TableCell>
+                  <TableCell>{itemDetail.rateperunit}</TableCell>
+                  <TableCell>
+                    <IconButton onClick={handleOpenEditDialog} color="primary">
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton onClick={handleDelete} color="error">
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </Box>
+        ) : null}
 
-      {/* Add Dialog */}
-      <Dialog open={addDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle>Add New ItemDetail</DialogTitle>
-        <DialogContent>
-          <TextField label="Item ID" fullWidth margin="dense" value={selectedItemId} disabled />
-          <TextField label="Item Name" fullWidth margin="dense" value={selectedItemName} disabled />
-          <TextField label="Quantity" name="itemquantity" fullWidth margin="dense" value={formData.itemquantity} onChange={handleChangeForm} />
-          <TextField label="Issued Quantity" name="issuedquantity" fullWidth margin="dense" value={formData.issuedquantity} onChange={handleChangeForm} />
-          <TextField label="Purchase Date" name="itempurchasedate" fullWidth margin="dense" value={formData.itempurchasedate} onChange={handleChangeForm} />
-          <TextField label="Rate/Unit" name="rateperunit" fullWidth margin="dense" value={formData.rateperunit} onChange={handleChangeForm} />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleSubmitAdd}>Add</Button>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        {/* Edit Dialog */}
+        <Dialog open={editDialogOpen} onClose={handleCloseDialog}>
+          <DialogTitle>Edit ItemDetail</DialogTitle>
+          <DialogContent>
+            <TextField label="Item ID" fullWidth margin="dense" value={selectedItemId} disabled />
+            <TextField label="Item Name" fullWidth margin="dense" value={selectedItemName} disabled />
+            <TextField label="Quantity" name="itemquantity" fullWidth margin="dense" value={formData.itemquantity} onChange={handleChangeForm} />
+            <TextField label="Issued Quantity" name="issuedquantity" fullWidth margin="dense" value={formData.issuedquantity} onChange={handleChangeForm} />
+            <DatePicker
+              label="Purchase Date"
+              value={formData.itempurchasedate}
+              onChange={handleDateChange}
+              slotProps={{ textField: { fullWidth: true, margin: "dense" } }}
+            />
+            <TextField label="Rate/Unit" name="rateperunit" fullWidth margin="dense" value={formData.rateperunit} onChange={handleChangeForm} />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleSubmitEdit}>Save</Button>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Add Dialog */}
+        <Dialog open={addDialogOpen} onClose={handleCloseDialog}>
+          <DialogTitle>Add New ItemDetail</DialogTitle>
+          <DialogContent>
+            <TextField label="Item ID" fullWidth margin="dense" value={selectedItemId} disabled />
+            <TextField label="Item Name" fullWidth margin="dense" value={selectedItemName} disabled />
+            <TextField label="Quantity" name="itemquantity" fullWidth margin="dense" value={formData.itemquantity} onChange={handleChangeForm} />
+            <TextField label="Issued Quantity" name="issuedquantity" fullWidth margin="dense" value={formData.issuedquantity} onChange={handleChangeForm} />
+            <DatePicker
+              label="Purchase Date"
+              value={formData.itempurchasedate}
+              onChange={handleDateChange}
+              slotProps={{ textField: { fullWidth: true, margin: "dense" } }}
+            />
+            <TextField label="Rate/Unit" name="rateperunit" fullWidth margin="dense" value={formData.rateperunit} onChange={handleChangeForm} />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleSubmitAdd}>Save</Button>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Box>
+    </LocalizationProvider>
   );
 };
 
