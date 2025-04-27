@@ -29,7 +29,8 @@ const AddItemDetail = () => {
     itemquantity: '',
     issuedquantity: '',
     itempurchasedate: null,
-    rateperunit: ''
+    rateperunit: '',
+    itemdisc:''
   });
 
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -102,7 +103,8 @@ const AddItemDetail = () => {
       itemquantity: detail.itemquantity,
       issuedquantity: detail.issuedquantity,
       itempurchasedate: dayjs(detail.itempurchasedate),
-      rateperunit: detail.rateperunit
+      rateperunit: detail.rateperunit,
+      itemdisc: detail.itemdisc
     });
     setEditDialogOpen(true);
   };
@@ -112,7 +114,8 @@ const AddItemDetail = () => {
       itemquantity: '',
       issuedquantity: '',
       itempurchasedate: null,
-      rateperunit: ''
+      rateperunit: '',
+      itemdisc: ''
     });
     setAddDialogOpen(true);
   };
@@ -286,6 +289,7 @@ const AddItemDetail = () => {
                   <TableCell className="p-3 text-center">Issued</TableCell>
                   <TableCell className="p-3 text-center">Purchase Date</TableCell>
                   <TableCell className="p-3 text-center">Rate/Unit</TableCell>
+                  <TableCell className="p-3 text-center">Item Discription</TableCell>
                   <TableCell className="p-3 text-center">Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -297,6 +301,7 @@ const AddItemDetail = () => {
                     <TableCell className="p-3 text-center">{detail.issuedquantity}</TableCell>
                     <TableCell className="p-3 text-center">{dayjs(detail.itempurchasedate).format('DD/MM/YYYY')}</TableCell>
                     <TableCell className="p-3 text-center">{detail.rateperunit}</TableCell>
+                    <TableCell className="p-3 text-center">{detail.itemdisc}</TableCell>
                     <TableCell className="p-3 text-center">
                       <IconButton color="primary" onClick={() => handleOpenEditDialog(detail)}>
                         <EditIcon />
@@ -334,6 +339,8 @@ const AddItemDetail = () => {
             />
             <TextField label="Rate per Unit" name="rateperunit" fullWidth margin="dense"
               value={formData.rateperunit} onChange={handleChangeForm} variant="outlined" size="small" />
+              <TextField label="Item Discription" name="itemdisc" fullWidth margin="dense"
+              value={formData.itemdisc} onChange={handleChangeForm} variant="outlined" size="small" />
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog} color="secondary">Cancel</Button>
@@ -363,6 +370,8 @@ const AddItemDetail = () => {
             />
             <TextField label="Rate per Unit" name="rateperunit" fullWidth margin="dense"
               value={formData.rateperunit} onChange={handleChangeForm} variant="outlined" size="small" />
+              <TextField label="Item Discription" name="itemdisc" fullWidth margin="dense"
+              value={formData.itemdisc} onChange={handleChangeForm} variant="outlined" size="small" />
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog} color="secondary">Cancel</Button>
