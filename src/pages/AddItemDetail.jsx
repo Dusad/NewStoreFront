@@ -280,41 +280,46 @@ const AddItemDetail = () => {
         )}
 
         {itemDetails.length > 0 && (
-          <Paper elevation={3} className="overflow-x-auto rounded-lg shadow-lg">
-            <Table className="min-w-full bg-white">
-              <TableHead>
-                <TableRow className="bg-indigo-500 text-white">
-                  <TableCell className="p-3 text-center">ID</TableCell>
-                  <TableCell className="p-3 text-center">Quantity</TableCell>
-                  <TableCell className="p-3 text-center">Issued</TableCell>
-                  <TableCell className="p-3 text-center">Purchase Date</TableCell>
-                  <TableCell className="p-3 text-center">Rate/Unit</TableCell>
-                  <TableCell className="p-3 text-center">Item Discription</TableCell>
-                  <TableCell className="p-3 text-center">Actions</TableCell>
+          <Paper elevation={3} className="overflow-x-auto rounded-lg shadow-md">
+          <Table className="min-w-full text-sm text-gray-800">
+            <TableHead className="bg-indigo-600 sticky top-0 z-10">
+              <TableRow>
+                <TableCell className="text-white font-semibold text-center py-3 px-4">ID</TableCell>
+                <TableCell className="text-white font-semibold text-center py-3 px-4">Quantity</TableCell>
+                <TableCell className="text-white font-semibold text-center py-3 px-4">Issued</TableCell>
+                <TableCell className="text-white font-semibold text-center py-3 px-4">Purchase Date</TableCell>
+                <TableCell className="text-white font-semibold text-center py-3 px-4">Rate/Unit</TableCell>
+                <TableCell className="text-white font-semibold text-center py-3 px-4">Description</TableCell>
+                <TableCell className="text-white font-semibold text-center py-3 px-4">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {itemDetails.map((detail, index) => (
+                <TableRow
+                  key={detail.id}
+                  className={index % 2 === 0 ? "bg-white hover:bg-indigo-50" : "bg-gray-50 hover:bg-indigo-50"}
+                >
+                  <TableCell className="text-center py-2 px-4">{detail.id}</TableCell>
+                  <TableCell className="text-center py-2 px-4">{detail.itemquantity}</TableCell>
+                  <TableCell className="text-center py-2 px-4">{detail.issuedquantity}</TableCell>
+                  <TableCell className="text-center py-2 px-4">
+                    {dayjs(detail.itempurchasedate).format('DD/MM/YYYY')}
+                  </TableCell>
+                  <TableCell className="text-center py-2 px-4">{detail.rateperunit}</TableCell>
+                  <TableCell className="text-center py-2 px-4">{detail.itemdisc}</TableCell>
+                  <TableCell className="text-center py-2 px-4">
+                    <IconButton color="primary" onClick={() => handleOpenEditDialog(detail)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton color="error" onClick={() => handleDelete(detail.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {itemDetails.map((detail) => (
-                  <TableRow key={detail.id} className="hover:bg-gray-100">
-                    <TableCell className="p-3 text-center">{detail.id}</TableCell>
-                    <TableCell className="p-3 text-center">{detail.itemquantity}</TableCell>
-                    <TableCell className="p-3 text-center">{detail.issuedquantity}</TableCell>
-                    <TableCell className="p-3 text-center">{dayjs(detail.itempurchasedate).format('DD/MM/YYYY')}</TableCell>
-                    <TableCell className="p-3 text-center">{detail.rateperunit}</TableCell>
-                    <TableCell className="p-3 text-center">{detail.itemdisc}</TableCell>
-                    <TableCell className="p-3 text-center">
-                      <IconButton color="primary" onClick={() => handleOpenEditDialog(detail)}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton color="error" onClick={() => handleDelete(detail.id)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Paper>
+              ))}
+            </TableBody>
+          </Table>
+        </Paper>        
         )}
 
         {/* Edit Dialog */}
@@ -339,12 +344,12 @@ const AddItemDetail = () => {
             />
             <TextField label="Rate per Unit" name="rateperunit" fullWidth margin="dense"
               value={formData.rateperunit} onChange={handleChangeForm} variant="outlined" size="small" />
-              <TextField label="Item Discription" name="itemdisc" fullWidth margin="dense"
+              <TextField label="Item Discription" name="itemdisc" fullWidth margin="dense" multiline rows={3}
               value={formData.itemdisc} onChange={handleChangeForm} variant="outlined" size="small" />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseDialog} color="secondary">Cancel</Button>
-            <Button onClick={() => handleSubmitEdit(formData.id)} color="primary">Save</Button>
+            <Button onClick={handleCloseDialog} variant="contained" color="secondary">Cancel</Button>
+            <Button onClick={() => handleSubmitEdit(formData.id)} variant="contained" color="success">Save</Button>
           </DialogActions>
         </Dialog>
 
@@ -370,12 +375,12 @@ const AddItemDetail = () => {
             />
             <TextField label="Rate per Unit" name="rateperunit" fullWidth margin="dense"
               value={formData.rateperunit} onChange={handleChangeForm} variant="outlined" size="small" />
-              <TextField label="Item Discription" name="itemdisc" fullWidth margin="dense"
+              <TextField label="Item Discription" name="itemdisc" fullWidth margin="dense" multiline rows={3}
               value={formData.itemdisc} onChange={handleChangeForm} variant="outlined" size="small" />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseDialog} color="secondary">Cancel</Button>
-            <Button onClick={handleSubmitAdd} color="primary">Add</Button>
+            <Button onClick={handleCloseDialog} variant="contained" color="secondary">Cancel</Button>
+            <Button onClick={handleSubmitAdd} variant="contained" color="success">Add</Button>
           </DialogActions>
         </Dialog>
 
@@ -386,8 +391,8 @@ const AddItemDetail = () => {
             <Typography>Are you sure you want to delete this item detail?</Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseDialog} color="secondary">Cancel</Button>
-            <Button onClick={confirmDelete} color="error">Delete</Button>
+            <Button onClick={handleCloseDialog} variant="contained" color="secondary">Cancel</Button>
+            <Button onClick={confirmDelete} variant="contained" color="error">Delete</Button>
           </DialogActions>
         </Dialog>
 
@@ -401,5 +406,4 @@ const AddItemDetail = () => {
     </LocalizationProvider>
   );
 };
-
 export default AddItemDetail;
