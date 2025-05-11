@@ -19,16 +19,17 @@ const IssueReturnItem = () => {
 
   const [selectedItemId, setSelectedItemId] = useState('');
   const [selectedItemName, setSelectedItemName] = useState('');
+  const [selectedItemDetailId, setSelectedItemDetailId] = useState(null); // New state for itemdetailId
 
   const [tabValue, setTabValue] = useState(0);
   const [issueForm, setIssueForm] = useState({
-    issueQuan: '',
-    issueto: '',
+    issuequan: '', // Changed from issueQuan
+    issuedto: '',  // Changed from issueto
     issuedate: dayjs()
   });
   const [returnForm, setReturnForm] = useState({
-    returnQuan: '',
-    returnFrom: '',
+    retrunquan: '', // Changed from returnQuan (note the typo to match API)
+    returnfrom: '', // Changed from returnFrom
     returndate: dayjs()
   });
 
@@ -72,6 +73,11 @@ const IssueReturnItem = () => {
               )
             );
             setSelectedItemName(selectedItem.itemname);
+            
+            // Set the first item detail ID as default
+            if (selectedItem.itemdetail.length > 0) {
+              setSelectedItemDetailId(selectedItem.itemdetail[0].id);
+            }
           }
         } catch (error) {
           console.error("Error fetching data:", error);
@@ -82,9 +88,9 @@ const IssueReturnItem = () => {
     fetchData();
   }, [selectedItemId, items]);
 
-  const handleItemClick = (itemId) => {
-    setSelectedItemId(itemId);
-  };
+  // const handleItemClick = (itemId) => {
+  //   setSelectedItemId(itemId);
+  // };
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -117,6 +123,11 @@ const IssueReturnItem = () => {
   };
 
   const handleIssueSubmit = async () => {
+    if (!selectedItemDetailId) {
+      showSnackbar("Please select an item detail first", 'error');
+      return;
+    }
+
     try {
       const issueDate = issueForm.issuedate.format('YYYY-MM-DDTHH:mm:ss');
       const response = await fetch("http://localhost:8080/issueitem", {
@@ -125,10 +136,10 @@ const IssueReturnItem = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          itemId: selectedItemId,
-          itemQuan: issueForm.issueQuan,
-          issueto: issueForm.issueto,
-          issuedate: issueDate
+          issuequan: issueForm.issuequan,
+          issuedto: issueForm.issuedto,
+          issuedate: issueDate,
+          itemdetailId: selectedItemDetailId
         })
       });
       
@@ -143,8 +154,8 @@ const IssueReturnItem = () => {
       
       showSnackbar("Item issued successfully!");
       setIssueForm({ 
-        issueQuan: '', 
-        issueto: '', 
+        issuequan: '', 
+        issuedto: '', 
         issuedate: dayjs() 
       });
     } catch (error) {
@@ -154,6 +165,11 @@ const IssueReturnItem = () => {
   };
 
   const handleReturnSubmit = async () => {
+    if (!selectedItemDetailId) {
+      showSnackbar("Please select an item detail first", 'error');
+      return;
+    }
+
     try {
       const returnDate = returnForm.returndate.format('YYYY-MM-DDTHH:mm:ss');
       const response = await fetch("http://localhost:8080/returnitem", {
@@ -162,10 +178,10 @@ const IssueReturnItem = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          itemId: selectedItemId,
-          itemQuan: returnForm.returnQuan,
-          returnFrom: returnForm.returnFrom,
-          returndate: returnDate
+          retrunquan: returnForm.retrunquan,
+          returnfrom: returnForm.returnfrom,
+          returndate: returnDate,
+          itemdetailId: selectedItemDetailId
         })
       });
       
@@ -180,8 +196,8 @@ const IssueReturnItem = () => {
       
       showSnackbar("Item returned successfully!");
       setReturnForm({ 
-        returnQuan: '', 
-        returnFrom: '', 
+        retrunquan: '', 
+        returnfrom: '', 
         returndate: dayjs() 
       });
     } catch (error) {
@@ -284,6 +300,28 @@ const IssueReturnItem = () => {
               <Tab label="Return Item" />
             </Tabs>
 
+            {/* Item Detail Selection Dropdown */}
+            {itemDetails.length > 0 && (
+              <Box className="mb-4">
+                <TextField
+                  select
+                  label="Select Item Detail"
+                  value={selectedItemDetailId || ''}
+                  onChange={(e) => setSelectedItemDetailId(e.target.value)}
+                  fullWidth
+                  SelectProps={{
+                    native: true,
+                  }}
+                >
+                  {itemDetails.map((detail) => (
+                    <option key={detail.id} value={detail.id}>
+                      ID: {detail.id} | Total: {detail.itemquantity} | Available: {detail.itemquantity - detail.issuedquantity} | Rate: {detail.rateperunit}
+                    </option>
+                  ))}
+                </TextField>
+              </Box>
+            )}
+
             {tabValue === 0 ? (
               <Paper elevation={3} className="p-4 mb-6">
                 <Typography variant="subtitle1" className="mb-4 text-indigo-600">
@@ -292,17 +330,17 @@ const IssueReturnItem = () => {
                 <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <TextField
                     label="Quantity to Issue"
-                    name="issueQuan"
+                    name="issuequan"
                     type="number"
-                    value={issueForm.issueQuan}
+                    value={issueForm.issuequan}
                     onChange={handleIssueChange}
                     fullWidth
                     required
                   />
                   <TextField
                     label="Issue To (Person/Department)"
-                    name="issueto"
-                    value={issueForm.issueto}
+                    name="issuedto"
+                    value={issueForm.issuedto}
                     onChange={handleIssueChange}
                     fullWidth
                     required
@@ -324,7 +362,7 @@ const IssueReturnItem = () => {
                   color="primary"
                   className="mt-4"
                   onClick={handleIssueSubmit}
-                  disabled={!issueForm.issueQuan || !issueForm.issueto}
+                  disabled={!issueForm.issuequan || !issueForm.issuedto || !selectedItemDetailId}
                 >
                   Issue Item
                 </Button>
@@ -337,17 +375,17 @@ const IssueReturnItem = () => {
                 <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <TextField
                     label="Quantity to Return"
-                    name="returnQuan"
+                    name="retrunquan"
                     type="number"
-                    value={returnForm.returnQuan}
+                    value={returnForm.retrunquan}
                     onChange={handleReturnChange}
                     fullWidth
                     required
                   />
                   <TextField
                     label="Return From (Person/Department)"
-                    name="returnFrom"
-                    value={returnForm.returnFrom}
+                    name="returnfrom"
+                    value={returnForm.returnfrom}
                     onChange={handleReturnChange}
                     fullWidth
                     required
@@ -369,7 +407,7 @@ const IssueReturnItem = () => {
                   color="secondary"
                   className="mt-4"
                   onClick={handleReturnSubmit}
-                  disabled={!returnForm.returnQuan || !returnForm.returnFrom}
+                  disabled={!returnForm.retrunquan || !returnForm.returnfrom || !selectedItemDetailId}
                 >
                   Return Item
                 </Button>
@@ -474,7 +512,7 @@ const IssueReturnItem = () => {
                       <TableCell>
                         {item.issuedto ? 'Issue' : 'Return'}
                       </TableCell>
-                      <TableCell>{item.issuequan}</TableCell>
+                      <TableCell>{item.issuequan || item.retrunquan}</TableCell>
                       <TableCell>
                         {item.issuedto || item.returnfrom}
                       </TableCell>
